@@ -27,6 +27,7 @@ function buildHtml() {
     button:disabled { opacity:.6; cursor:not-allowed; }
     .result { margin-top:14px; padding:12px; border-radius:10px; background:#ecfdf5; color:var(--ok); display:none; }
     .error { margin-top:14px; padding:12px; border-radius:10px; background:#fef2f2; color:#b91c1c; display:none; }
+    #previewCanvas { width:100%; border:1px solid #d1d5db; border-radius:10px; background:#fff; }
   </style>
 </head>
 <body>
@@ -48,28 +49,65 @@ function buildHtml() {
       </form>
       <button id="btnVisualizar" disabled style="margin-top:10px;background:#0f766e;opacity:.6;cursor:not-allowed;">Visualizar PDF</button>
       <button id="btnExportar" disabled style="margin-top:10px;background:#1d4ed8;opacity:.6;cursor:not-allowed;">Exportar PDF</button>
-      <button id="btnAbrir" disabled style="margin-top:10px;background:#0f766e;opacity:.6;cursor:not-allowed;">Abrir PDF em nova aba</button>
+      <button id="btnAbrir" disabled style="margin-top:10px;background:#0f766e;opacity:.6;cursor:not-allowed;">Abrir no navegador</button>
       <div id="previewBox" style="display:none;margin-top:12px;">
         <h3 style="margin:0 0 8px;">Visualizacao</h3>
-        <object id="previewPdf" type="application/pdf" style="width:100%;height:430px;border:1px solid #d1d5db;border-radius:10px;background:#fff;"></object>
+        <canvas id="previewCanvas"></canvas>
       </div>
       <div class="result" id="result"></div>
       <div class="error" id="error"></div>
     </div>
   </div>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.16.105/pdf.min.js"></script>
   <script>
+    if (window.pdfjsLib) {
+      window.pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.16.105/pdf.worker.min.js';
+    }
+
     const form = document.getElementById('form');
     const btn = document.getElementById('btn');
     const btnVisualizar = document.getElementById('btnVisualizar');
     const btnExportar = document.getElementById('btnExportar');
     const btnAbrir = document.getElementById('btnAbrir');
     const previewBox = document.getElementById('previewBox');
-    const previewPdf = document.getElementById('previewPdf');
+    const previewCanvas = document.getElementById('previewCanvas');
     const result = document.getElementById('result');
     const error = document.getElementById('error');
     let ultimoBlob = null;
     let ultimoNome = 'documento.pdf';
     let ultimoUrl = '';
+    let ultimoPdfBytes = null;
+
+    function isCapacitorApp() {
+      return !!(window.Capacitor && window.Capacitor.Plugins);
+    }
+
+    async function exportarNoApp(bytes, fileName) {
+      const saver = window.Capacitor?.Plugins?.PdfSaver;
+      if (!saver?.savePdf) return false;
+      let binary = '';
+      const uint8 = new Uint8Array(bytes);
+      const chunk = 0x8000;
+      for (let i = 0; i < uint8.length; i += chunk) {
+        binary += String.fromCharCode(...uint8.subarray(i, i + chunk));
+      }
+      const base64 = btoa(binary);
+      await saver.savePdf({ base64, fileName });
+      return true;
+    }
+
+    async function renderPreview(bytes) {
+      if (!window.pdfjsLib) throw new Error('PDF.js indisponivel.');
+      const loadingTask = window.pdfjsLib.getDocument({ data: bytes });
+      const pdf = await loadingTask.promise;
+      const page = await pdf.getPage(1);
+      const viewport = page.getViewport({ scale: 1.3 });
+      const ctx = previewCanvas.getContext('2d');
+      previewCanvas.width = viewport.width;
+      previewCanvas.height = viewport.height;
+      await page.render({ canvasContext: ctx, viewport }).promise;
+      previewBox.style.display = 'block';
+    }
 
     form.addEventListener('submit', async (e) => {
       e.preventDefault();
@@ -86,10 +124,10 @@ function buildHtml() {
           throw new Error(msg || 'Erro ao gerar PDF');
         }
         ultimoBlob = await res.blob();
+        ultimoPdfBytes = await ultimoBlob.arrayBuffer();
         ultimoNome = res.headers.get('x-file-name') || 'documento.pdf';
         if (ultimoUrl) URL.revokeObjectURL(ultimoUrl);
         ultimoUrl = URL.createObjectURL(ultimoBlob);
-        previewPdf.data = '';
         previewBox.style.display = 'none';
         btnVisualizar.disabled = false;
         btnExportar.disabled = false;
@@ -113,23 +151,43 @@ function buildHtml() {
 
     btnExportar.addEventListener('click', () => {
       if (!ultimoBlob) return;
-      const url = URL.createObjectURL(ultimoBlob);
-      const a = document.createElement('a');
-      a.href = url;
-      a.download = ultimoNome;
-      a.click();
-      URL.revokeObjectURL(url);
+      (async () => {
+        try {
+          if (isCapacitorApp() && ultimoPdfBytes) {
+            const ok = await exportarNoApp(ultimoPdfBytes, ultimoNome);
+            if (ok) return;
+          }
+          const url = URL.createObjectURL(ultimoBlob);
+          const a = document.createElement('a');
+          a.href = url;
+          a.download = ultimoNome;
+          a.click();
+          URL.revokeObjectURL(url);
+        } catch (e) {
+          error.textContent = e.message;
+          error.style.display = 'block';
+        }
+      })();
     });
 
     btnAbrir.addEventListener('click', () => {
       if (!ultimoUrl) return;
+      if (isCapacitorApp()) {
+        result.textContent = 'No app, use "Exportar PDF".';
+        result.style.display = 'block';
+        return;
+      }
       window.open(ultimoUrl, '_blank');
     });
 
-    btnVisualizar.addEventListener('click', () => {
-      if (!ultimoUrl) return;
-      previewPdf.data = ultimoUrl;
-      previewBox.style.display = 'block';
+    btnVisualizar.addEventListener('click', async () => {
+      try {
+        if (!ultimoPdfBytes) return;
+        await renderPreview(ultimoPdfBytes);
+      } catch (e) {
+        error.textContent = 'Falha ao visualizar PDF: ' + e.message;
+        error.style.display = 'block';
+      }
     });
   </script>
 </body>
