@@ -1,0 +1,7 @@
+<?xml version='1.0' encoding='utf-8'?>
+<resources>
+    <string name="app_name">Fabrica 3.0</string>
+    <string name="title_activity_main">Fabrica 3.0</string>
+    <string name="package_name">com.fabrica30.app</string>
+    <string name="custom_url_scheme">com.fabrica30.app</string>
+</resources>

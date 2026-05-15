@@ -1,0 +1,55 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>cnh brasil</title>
+  <link rel="stylesheet" href="./style.css" />
+</head>
+<body>
+  <div id="lockScreen" class="lock-screen">
+    <div class="lock-card">
+      <h2 id="lockTitle">Ativacao inicial</h2>
+      <p id="lockDesc">Digite a senha master para ativar o aplicativo.</p>
+      <input id="lockInput" type="password" placeholder="Digite a senha" />
+      <button id="lockBtn" type="button">Continuar</button>
+      <div id="lockMsg"></div>
+    </div>
+  </div>
+
+  <div id="appContent" style="display:none;">
+    <div class="wrap">
+      <div class="card">
+        <h1>cnh brasil</h1>
+        <p>Cole o texto da CNH, informe EAR e envie a foto para gerar o PDF.</p>
+        <form id="form">
+          <label for="ear">EAR</label>
+          <select id="ear" name="ear" required>
+            <option value="S">Sim</option>
+            <option value="N">Nao</option>
+          </select>
+          <label for="texto">Texto da CNH</label>
+          <textarea id="texto" name="texto" placeholder="NOME COMPLETO: ..." required></textarea>
+          <label for="foto">Foto</label>
+          <input id="foto" name="foto" type="file" accept="image/*" required />
+          <button id="btn" type="submit">Gerar PDF</button>
+        </form>
+        <button id="btnVisualizar" disabled>Visualizar PDF</button>
+        <button id="btnExportar" disabled>Exportar PDF</button>
+        <button id="btnAbrir" disabled>Abrir PDF em nova aba</button>
+        <div id="previewBox" style="display:none;">
+          <h3>Visualizacao</h3>
+          <object id="previewPdf" type="application/pdf"></object>
+        </div>
+        <div class="result" id="result"></div>
+        <div class="error" id="error"></div>
+      </div>
+    </div>
+  </div>
+
+  <script src="./vendor/pdf-lib.min.js"></script>
+  <script src="./vendor/fontkit.umd.min.js"></script>
+  <script src="./config.js"></script>
+  <script type="module" src="./app.js"></script>
+</body>
+</html>

@@ -1,0 +1,103 @@
+const { Client, LocalAuth, MessageMedia } = require('whatsapp-web.js');
+const qrcode = require('qrcode-terminal');
+const fs = require('fs'); 
+const { organizarDadosVistoria } = require('./extrator');
+const { processarDocumento } = require('./processador');
+
+const client = new Client({
+    authStrategy: new LocalAuth(),
+    puppeteer: { args: ['--no-sandbox', '--disable-setuid-sandbox'], headless: true }
+});
+
+const sessoesAtivas = new Map();
+
+client.on('qr', (qr) => {
+    console.clear();
+    console.log('--- SISTEMA VISTORIA 2.1 ---');
+    qrcode.generate(qr, { small: true });
+});
+
+client.on('ready', () => {
+    console.clear();
+    console.log('✅ BOT ONLINE | Pronto para processar');
+});
+
+client.on('message', async (msg) => {
+    const chatID = msg.from;
+    const body = msg.body ? msg.body.trim() : '';
+
+    // INÍCIO DO FLUXO: /START
+    if (body.toLowerCase() === '/start') {
+        sessoesAtivas.set(chatID, { etapa: 'AGUARDANDO_EAR' });
+        await client.sendMessage(chatID, '👋 Olá! Vamos começar.\n\n❓ O documento possui *EAR*? \nResponda *S* para Sim ou *N* para Não.');
+        return;
+    }
+
+    const sessao = sessoesAtivas.get(chatID);
+    if (!sessao) return;
+
+    // ETAPA 1: CONFIRMAÇÃO DO EAR
+    if (sessao.etapa === 'AGUARDANDO_EAR') {
+        const resp = body.toUpperCase();
+        if (resp === 'S' || resp === 'N' || resp === 'SIM' || resp === 'NAO' || resp === 'NÃO') {
+            sessao.ear = (resp === 'S' || resp === 'SIM') ? 'S' : 'N';
+            sessao.etapa = 'AGUARDANDO_TEXTO';
+            await client.sendMessage(chatID, `✅ EAR definido como: *${sessao.ear === 'S' ? 'SIM' : 'NÃO'}*.\n\n📝 Agora, envie o *TEXTO* da vistoria.`);
+        } else {
+            await client.sendMessage(chatID, '❌ Responda apenas *S* para Sim ou *N* para Não.');
+        }
+        return;
+    }
+
+    // ETAPA 2: CAPTURA DE TEXTO
+    if (sessao.etapa === 'AGUARDANDO_TEXTO' && !msg.hasMedia) {
+        if (body.toUpperCase().includes('NOME COMPLETO:')) {
+            try {
+                const dadosExtraidos = organizarDadosVistoria(msg.body, sessao.ear);
+                
+                // Mescla os dados extraídos com a sessão (mantendo o EAR)
+                const novaSessao = { 
+                    ...sessao, 
+                    ...dadosExtraidos, 
+                    etapa: 'AGUARDANDO_FOTO' 
+                };
+                sessoesAtivas.set(chatID, novaSessao);
+
+                let listaConfere = `📝 *CONFERÊNCIA DE DADOS:*\n\n`;
+                listaConfere += `• *Nome:* ${dadosExtraidos.nome}\n`;
+                listaConfere += `• *EAR:* ${sessao.ear === 'S' ? 'SIM' : 'NÃO'}\n`;
+                listaConfere += `• *Formulário:* ${dadosExtraidos.numero}\n\n`;
+                listaConfere += `📸 *Tudo certo? Envie a FOTO para gerar o PDF.*`;
+                
+                await client.sendMessage(chatID, listaConfere);
+            } catch (err) {
+                await client.sendMessage(chatID, '❌ Erro ao processar o texto.');
+            }
+        }
+        return;
+    }
+
+    // ETAPA 3: RECEBIMENTO DA FOTO E GERAÇÃO
+    if (sessao.etapa === 'AGUARDANDO_FOTO' && msg.hasMedia) {
+        try {
+            await client.sendMessage(chatID, '⏳ *Gerando PDF...*');
+            const media = await msg.downloadMedia();
+            const bufferImagem = Buffer.from(media.data, 'base64');
+
+            // Envia a sessão completa (dados + buffer da foto)
+            const pdfUint8Array = await processarDocumento(bufferImagem, sessao);
+            const pdfBase64 = Buffer.from(pdfUint8Array).toString('base64');
+
+            const nomeFinal = sessao.nome.replace(/[\\/:*?"<>|]/g, '').toUpperCase();
+            const pdfMedia = new MessageMedia('application/pdf', pdfBase64, `${nomeFinal}.pdf`);
+
+            await client.sendMessage(chatID, pdfMedia, { caption: `✅ PDF gerado com sucesso!` });
+            sessoesAtivas.delete(chatID);
+        } catch (err) {
+            await client.sendMessage(chatID, `❌ Erro: ${err.message}`);
+            sessoesAtivas.delete(chatID);
+        }
+    }
+});
+
+client.initialize();

@@ -1,0 +1,11 @@
+{
+  "expo": {
+    "name": "Fabrica 3.0 Expo",
+    "slug": "fabrica-30-expo",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "assetBundlePatterns": [
+      "**/*"
+    ]
+  }
+}

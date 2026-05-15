@@ -1,0 +1,20 @@
+{
+  "name": "fabrica-expo-go",
+  "version": "1.0.0",
+  "private": true,
+  "main": "index.js",
+  "scripts": {
+    "start": "expo start",
+    "android": "expo start --android",
+    "ios": "expo start --ios",
+    "web": "expo start --web"
+  },
+  "dependencies": {
+    "expo": "~53.0.20",
+    "expo-document-picker": "~13.1.6",
+    "expo-file-system": "~18.1.11",
+    "expo-sharing": "~13.1.5",
+    "react": "19.0.0",
+    "react-native": "0.79.6"
+  }
+}

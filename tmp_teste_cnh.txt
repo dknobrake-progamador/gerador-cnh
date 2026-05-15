@@ -1,0 +1,15 @@
+﻿NOME COMPLETO: JOAO TESTE SILVA
+CPF: 123.456.789-00
+RG: 1234567
+Data de Nascimento: 1990-01-02
+Nome da Mae: MARIA TESTE
+Nome do Pai: JOSE TESTE
+Emissao: 01/01/2020
+Primeira Habilitacao: 01/01/2010
+Numero de Registro: 9988776655
+RENACH: ABC12345
+Formulario CNH: 123456789
+Categoria: B
+Validade: 01/01/2030
+Cidade: RIO DE JANEIRO
+UF: RJ

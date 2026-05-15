@@ -1,0 +1,41 @@
+:root { --bg:#f4f7ff; --card:#ffffff; --ink:#111827; --muted:#4b5563; --ok:#047857; --line:#d1d5db; --brand:#0f766e; }
+* { box-sizing:border-box; font-family: "Segoe UI", Tahoma, sans-serif; }
+body { margin:0; background:linear-gradient(135deg,#eff6ff,#ecfeff); color:var(--ink); }
+.wrap { max-width:860px; margin:30px auto; padding:0 16px; }
+.card { background:var(--card); border:1px solid var(--line); border-radius:14px; padding:18px; box-shadow:0 10px 30px rgba(0,0,0,.06); }
+h1 { margin:0 0 8px; font-size:26px; }
+p { margin:0 0 16px; color:var(--muted); }
+label { font-weight:600; display:block; margin:12px 0 8px; }
+textarea,input,select,button { width:100%; border:1px solid var(--line); border-radius:10px; padding:11px; font-size:15px; }
+textarea { min-height:220px; resize:vertical; }
+button { background:var(--brand); color:#fff; border:none; font-weight:700; cursor:pointer; margin-top:14px; }
+button:disabled { opacity:.6; cursor:not-allowed; }
+.result { margin-top:14px; padding:12px; border-radius:10px; background:#ecfdf5; color:var(--ok); display:none; }
+.error { margin-top:14px; padding:12px; border-radius:10px; background:#fef2f2; color:#b91c1c; display:none; }
+#btnExportar { background:#1d4ed8; }
+#btnAbrir { background:#0f766e; }
+#previewBox { margin-top:12px; }
+#previewBox h3 { margin:0 0 8px; }
+#previewPdf { width:100%; height:430px; border:1px solid #d1d5db; border-radius:10px; background:#fff; }
+
+.lock-screen {
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+  background: linear-gradient(135deg, #0b1e53, #0f766e);
+}
+.lock-card {
+  width: 100%;
+  max-width: 460px;
+  background: #ffffff;
+  border-radius: 18px;
+  padding: 18px;
+  box-shadow: 0 12px 30px rgba(0,0,0,.25);
+}
+.lock-card h2 { margin: 0 0 8px; }
+.lock-card p { margin: 0 0 10px; color: #334155; }
+#lockInput { width: 100%; padding: 11px; border: 1px solid #cbd5e1; border-radius: 10px; }
+#lockBtn { width: 100%; margin-top: 10px; border: 0; border-radius: 10px; padding: 10px; background: #0f766e; color: #fff; font-weight: 700; }
+#lockMsg { margin-top: 8px; color: #b91c1c; min-height: 18px; }

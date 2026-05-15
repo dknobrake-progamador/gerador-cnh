@@ -1,0 +1,37 @@
+{
+  "name": "fabrica_3.0_app",
+  "version": "1.0.0",
+  "description": "Aplicativo unificado para gerar PDF CNH via Web, Telegram e WhatsApp.",
+  "main": "index.js",
+  "scripts": {
+    "start": "node index.js",
+    "start:web": "node web-server.js",
+    "start:offline": "node index.js offline",
+    "start:telegram": "node index.js telegram",
+    "start:whatsapp": "node index.js whatsapp",
+    "mobile:build-assets": "node scripts/build-mobile-assets.js",
+    "mobile:add-android": "npx cap add android",
+    "mobile:sync": "npm run mobile:build-assets && npx cap sync android",
+    "mobile:open": "npx cap open android",
+    "check": "node --check index.js && node --check web-server.js && node --check telegram-bot.js && node --check whatsapp-bot.js && node --check offline-cli.js && node --check processador.js && node --check extrator.js"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "type": "commonjs",
+  "dependencies": {
+    "@pdf-lib/fontkit": "^1.1.1",
+    "@capacitor/android": "^7.4.3",
+    "@capacitor/cli": "^7.4.3",
+    "@capacitor/core": "^7.4.3",
+    "dotenv": "^16.6.1",
+    "express": "^5.1.0",
+    "multer": "^2.0.2",
+    "node-telegram-bot-api": "^0.66.0",
+    "pdf-lib": "^1.17.1",
+    "qrcode-terminal": "^0.12.0",
+    "sharp": "^0.34.5",
+    "skia-canvas": "^3.0.8",
+    "whatsapp-web.js": "^1.34.6"
+  }
+}
